@@ -2,6 +2,10 @@
 
 Computer Graphics (Fall 2026) Project 2. A hierarchical 3D cat built with OpenGL and FLTK.
 
+**Repo:** https://github.com/owenchung030915-hkust/ModSkelF26
+
+For the 30-pt oral / video questions, see [`DEMO_QA.md`](DEMO_QA.md).
+
 ## Requirements
 
 - Windows
