@@ -1,0 +1,34 @@
+# Build outputs
+Debug/
+Release/
+*.obj
+*.exe
+*.pdb
+*.ilk
+*.idb
+*.tlog
+*.recipe
+*.log
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.ncb
+*.sdf
+*.opensdf
+*.VC.db
+*.VC.db-shm
+*.VC.db-wal
+*.aps
+*.user
+ipch/
+
+# Old VS / junk
+modeler.suo
+modeler.suo.old
+modeler.ncb
+modeler.sdf
+modeler.VC.db
+modeler.exe
+*.sln.docstates
