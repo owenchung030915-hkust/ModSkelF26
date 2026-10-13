@@ -46,29 +46,55 @@ That is the same as `gluLookAt`: rotate, then translate the world into camera sp
 
 ---
 
-## Q2. Required extension: coupled **Sit** slider
+## Q2. Bonus: extra animated sequences (walk / pounce / groom)
 
-**Demo first:** drag **Sit (multi)** from 0 to 1. Hind hips fold, knees bend, body drops.
+**This is the [bell] “additional animated sequence” item.**
 
-**Show:** `sample.cpp` — the `VAL(SIT)` mapping.
+### Demo setup (do this first on screen)
 
-**Say:**
+1. Set **Anim Speed** ≈ `1`.
+2. Set **Anim 0idle/1walk/2pounce/3groom** to **`1`** (walk).
+3. Turn on **Control → Animate**.
+4. Optional: switch to **`2`** (pounce) then **`3`** (groom) for 2–3 seconds each.
 
-One slider drives several joints. We read `VAL(SIT)` once, then map it to hip fold, knee bend, and spine:
+You should see alternating legs (walk), crouch→spring (pounce), or head tuck + raised paw (groom).
+
+### Show code: `sample.cpp`
+
+Each frame we advance a phase, then a `switch` on `ANIM_MODE` writes offsets into many joints:
 
 ```cpp
-float sit = (float)VAL(SIT);
+m_animPhase += 0.08 * VAL(ANIM_SPEED);
 
-float spineArch = stretch * 25.0f - sit * 10.0f + ...;
-float hindFold  = sit * 55.0f + stretch * (-15.0f);
-float hindKnee  = sit * 70.0f;
+float walk    = sin(m_animPhase * 2.2 * moodAnim);
+float walkOpp = sin(m_animPhase * 2.2 * moodAnim + M_PI);
 
-float legHL = (float)VAL(LEG_HL) + hindFold + ...;
-float legHR = (float)VAL(LEG_HR) + hindFold + ...;
-float kneeH = 18.0f + hindKnee + ...;
+switch (animMode)
+{
+case 1: // Walk — opposite-phase legs
+	modeLegFL = walk * 28.0f;
+	modeLegFR = walkOpp * 28.0f;
+	modeLegHL = walkOpp * 22.0f;
+	modeLegHR = walk * 22.0f;
+	modeKneeF = 8.0f + fabs(walk) * 12.0f;
+	modeKneeH = 10.0f + fabs(walkOpp) * 14.0f;
+	modeBodyBob = fabs(walk) * 0.06f;
+	break;
+case 2: // Pounce — crouch then spring
+	// t from anim drives spine, hips, knees together
+	break;
+case 3: // Groom — head down + front paw up
+	modeHeadPitch = -35.0f + anim * 8.0f;
+	modeLegFL = 55.0f + anim * 15.0f;
+	break;
+}
 ```
 
-`drawLeg` applies hip then knee with `glRotated` / `glPushMatrix`, so one Sit value moves hip **and** knee together — same idea as the spec’s “straighten a leg.”
+Those `modeLeg*` / `modeKnee*` values are added into the normal joint angles before `drawLeg`, so one anim mode drives the whole pose over time when Animate is on (~30 redraws/sec).
+
+**Say (brief):**
+
+> For our bonus we added animated sequences. With Animate on, `draw()` increments a time phase. Anim mode 1 is a walk cycle: opposite sine waves on front and hind legs so the cat walks. Mode 2 is pounce, mode 3 is groom. So instead of one slider, the animation automatically drives many joints each frame.
 
 ---
 
@@ -76,6 +102,18 @@ float kneeH = 18.0f + hindKnee + ...;
 
 > **Q1:** We replaced `gluLookAt` with our own `Camera::lookAt`. From eye, at, and up we build an orthonormal basis: forward is at minus eye, side is forward cross up, up is side cross forward. We load that as a rotation matrix, then translate by minus eye so the camera is at the origin.
 >
-> **Q2:** Our coupled control is Sit. One slider value is added into hind hip angles, hind knees, and a small spine change, so the cat sits instead of moving one joint.
+> **Q2:** Our bonus is an extra animation sequence. With Control→Animate on and Anim mode set to walk, each draw call advances a phase angle. We use sine for one diagonal pair of legs and the opposite phase for the other pair, plus knee bend, so the cat walks. We also have pounce and groom modes in the same switch.
 
-**On camera:** ~20s on `lookAt` in `camera.cpp`, ~25s scrubbing Sit while pointing at the `sit * 55` / `sit * 70` lines.
+**On camera:**
+
+| Time | What to show |
+| --- | --- |
+| 0–18s | `camera.cpp` `lookAt` (Q1) |
+| 18–30s | Live demo: Animate ON, Anim = 1 (walk), maybe flip to 2 |
+| 30–45s | `sample.cpp` walk `switch` case, point at `walk` / `walkOpp` |
+
+---
+
+## Backup Q2 (if walk is awkward): L-system plant
+
+Scrub **Plant L-System Depth** `1 → 4`. Show recursive `drawLSystemPlant` in `sample.cpp` (cylinder + 3 recursive branches with `glPushMatrix` / `glPopMatrix`). Say: “procedural modeling bonus — depth slider controls recursion.”
